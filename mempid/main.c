@@ -12,8 +12,10 @@
 int main(int argc, char **argv){
     int opt, *pidlist;
     unsigned int flags, ppid;
-    if (argc < 2)
+    if (argc < 2){
         help();
+        exit(0);
+    }
 
     while ((opt = getopt(argc, argv, "hsp:")) != -1){
         switch (opt){
@@ -40,7 +42,7 @@ int * getpidlist(int ppid){
     DIR *dp;
     struct dirent *dirp;
     int dirnamepid;
-    char *buff;
+    char *piddir, *pidstatfile;
     int *local_pidlist = (int *) malloc(4096*sizeof(int));
     PROC * *proclist = NULL;
 
@@ -48,15 +50,27 @@ int * getpidlist(int ppid){
         exit(EXIT_FAILURE);
 
     while ((dirp = readdir(dp)) != NULL){
-        if (sscanf(dirp->d_name, "%md%ms", &dirnamepid, &buff) == 1){
-            buff = strdup(PROCDIR);
-            sprintf(buff, "%s/%s", buff, dirp->d_name);
-            if (isdir(buff))
-                printf("%s\n", dirp->d_name);
+        if (sscanf(dirp->d_name, "%md%ms", &dirnamepid, &piddir) == 1){
+            piddir = strdup(PROCDIR);
+            // piddir = /proc + / + dirname
+            sprintf(piddir, "%s/%s", piddir, dirp->d_name);
+            if (isdir(piddir)){
+                // piddir = /proc/pid + / + stat
+                sprintf(pidstatfile, "%s/%s", piddir, STATFILENAME);
+                // read stat file
+                if (ppid == atoi(dirp->d_name))
+                    append_ppid(local_pidlist, pidstatfile);
+                else
+                    scan_for_ppid(local_pidlist, pidstatfile);
+            }
         }
     }
 
     return local_pidlist;
+}
+
+int append_ppid(PROC ** proclist, const char statfilename){
+
 }
 
 int isdir(const char *dirname){
@@ -71,7 +85,7 @@ PROC ** proclist_realloc(PROC **proclist, int new_size){
     if (proclist == NULL || new_size == 1)
         return (PROC **) malloc(sizeof(PROC *));
     else if (new_size > 1)
-        return (PROC **) realloc(proclist, newsize * sizeof(PROC *));
+        return (PROC **) realloc(proclist, new_size * sizeof(PROC *));
     else
         return NULL;
 }

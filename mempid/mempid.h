@@ -2,6 +2,9 @@
 #define _MEMPID_H_
 
 #define PROCDIR "/proc"
+#define STATFILENAME "stat"
+
+#define statscanf "%md %ms %*c %md %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %mld %*ld %*llu %*lu %mld"
 
 enum _flags { SUMMARY = 1, PPID = 2 };
 
@@ -21,4 +24,5 @@ int isdir(const char *dirname);
 
 PROC ** proclist_realloc(PROC **proclist, int new_size);
 
+int append_ppid(PROC ** proclist, const char statfilename);
 #endif
