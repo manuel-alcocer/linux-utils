@@ -42,6 +42,7 @@ int * getpidlist(int ppid){
     int dirnamepid;
     char *buff;
     int *local_pidlist = (int *) malloc(4096*sizeof(int));
+    PROC * *proclist = NULL;
 
     if ((dp = opendir(PROCDIR)) == NULL)
         exit(EXIT_FAILURE);
@@ -63,8 +64,16 @@ int isdir(const char *dirname){
 
     if (stat(dirname, &dir) == 0 && S_ISDIR(dir.st_mode))
         return 1;
-
     return 0;
+}
+
+PROC ** proclist_realloc(PROC **proclist, int new_size){
+    if (proclist == NULL || new_size == 1)
+        return (PROC **) malloc(sizeof(PROC *));
+    else if (new_size > 1)
+        return (PROC **) realloc(proclist, newsize * sizeof(PROC *));
+    else
+        return NULL;
 }
 
 void help(){
