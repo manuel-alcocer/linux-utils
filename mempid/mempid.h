@@ -4,7 +4,7 @@
 #define PROCDIR "/proc"
 #define STATFILENAME "stat"
 
-#define statscanf "%d %ms %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %ld %*ld %*llu %*lu %mld"
+#define statscanf "%d (%m[^)]) %*c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %ld %*d %*u %*u %ld"
 
 enum _flags { SUMMARY = 1, PPID = 2 };
 

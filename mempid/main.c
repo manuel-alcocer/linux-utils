@@ -49,8 +49,8 @@ int main(int argc, char **argv){
 PROCLIST * getpidlist(int ppid){
     DIR *dp;
     struct dirent *dirp;
-    int dirnamepid, pid;
-    char *piddir, *pidstatfile;
+    int dirnamepid;
+    char *piddir;
     PROCLIST * local_proclist = (PROCLIST *) malloc(sizeof(PROCLIST));
 
     local_proclist->pnum = 0;
@@ -63,23 +63,9 @@ PROCLIST * getpidlist(int ppid){
     while ((dirp = readdir(dp)) != NULL){
         if (sscanf(dirp->d_name, "%d%ms", &dirnamepid, &piddir) == 1){
             piddir = strdup(PROCDIR);
-            // piddir = /proc + / + dirname
             sprintf(piddir, "%s/%s", piddir, dirp->d_name);
-            if (isdir(piddir)){
-                // pidstatfile = /proc/pid + / + stat
-                pidstatfile = strdup(piddir);
-                sprintf(pidstatfile, "%s/%s", pidstatfile, STATFILENAME);
-                // read ppid (main process) stat file
-                if (ppid == atoi(dirp->d_name)){
-                    pid = ppid;
-                    append_pid(local_proclist, pidstatfile, pid);
-                }
-                else {
-                    pid = scan_for_pid(pidstatfile, ppid);
-                    if (pid >= 0)
-                        append_pid(local_proclist, pidstatfile, pid);
-                }
-            }
+            if (isdir(piddir))
+                read_statfile(local_proclist, dirp->d_name, ppid);
         }
     }
 
@@ -87,12 +73,10 @@ PROCLIST * getpidlist(int ppid){
 }
 
 int read_statfile(PROCLIST * proclist, const char *dirname, int ppid){
-    // pidstatfile = /proc/pid + / + stat
-    char *pidstatfile = (char *) malloc((NAME_MAX + PATH_MAX), sizeof(char));
+    char *pidstatfile = (char *) malloc((NAME_MAX + PATH_MAX) * sizeof(char));
     int pid;
 
     sprintf(pidstatfile, "%s/%s/%s", PROCDIR, dirname, STATFILENAME);
-    // read ppid (main process) stat file
     if (ppid == atoi(dirname)){
         pid = ppid;
         append_pid(proclist, pidstatfile, pid);
