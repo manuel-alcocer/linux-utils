@@ -16,13 +16,30 @@ typedef struct _proc {
     long int rss;           //  (24) %ld
 } PROC;
 
+typedef struct _proclist {
+    int pnum;
+    long int pagesize;
+    PROC ** processes;
+} PROCLIST;
+
 void help();
 
-int * getpidlist(int ppid);
+PROCLIST * getpidlist(int ppid);
 
 int isdir(const char *dirname);
 
-PROC ** proclist_realloc(PROC **proclist, int new_size);
+PROC ** processes_realloc(PROCLIST * proclist);
 
-int append_ppid(PROC ** proclist, const char statfilename);
+int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid);
+
+int scan_for_pid(const char *pidstatfile, int ppid);
+
+int print_processes(PROCLIST *proclist);
+
+int print_table(PROCLIST *proclist);
+
+int fields_size(PROCLIST *proclist, int * *f);
+
+int line_size(int * fields);
+
 #endif
