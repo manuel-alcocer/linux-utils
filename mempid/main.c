@@ -1,4 +1,4 @@
-#include "mempid.h"
+#include "memofpid.h"
 
 #include <stdio.h>
 #include <getopt.h>
