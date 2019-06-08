@@ -122,7 +122,6 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
     proclist->pnum--;
 
     return 0;
-
 }
 
 int scan_for_pid(const char *pidstatfile, int ppid){
