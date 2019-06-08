@@ -12,6 +12,8 @@
 int main(int argc, char **argv){
     int opt, *pidlist;
     unsigned int flags, ppid;
+    PROCLIST *proclist;
+
     if (argc < 2){
         help();
         exit(0);
@@ -33,7 +35,12 @@ int main(int argc, char **argv){
         }
     }
 
-    getpidlist(ppid);
+    proclist = getpidlist(ppid);
+    
+    if (proclist->pnum > 0){
+        if (flags & SUMMARY == SUMMARY)
+            print_table(proclist);
+    }
 
     return 0;
 }
@@ -74,9 +81,6 @@ PROCLIST * getpidlist(int ppid){
             }
         }
     }
-
-    if (local_proclist->processes != NULL)
-        print_table(local_proclist);
 
     return local_proclist;
 }
