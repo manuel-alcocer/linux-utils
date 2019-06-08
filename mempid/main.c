@@ -12,6 +12,8 @@
 int main(int argc, char **argv){
     int opt, *pidlist;
     unsigned int flags, ppid;
+    PROCLIST *proclist;
+
     if (argc < 2){
         help();
         exit(0);
@@ -33,7 +35,11 @@ int main(int argc, char **argv){
         }
     }
 
-    getpidlist(ppid);
+    proclist = getpidlist(ppid);
+    if (proclist->pnum > 0){
+        if (flags & SUMMARY == SUMMARY)
+        print_table(proclist);
+	}
 
     return 0;
 }
@@ -58,27 +64,28 @@ PROCLIST * getpidlist(int ppid){
             // piddir = /proc + / + dirname
             sprintf(piddir, "%s/%s", piddir, dirp->d_name);
             if (isdir(piddir)){
-                // piddir = /proc/pid + / + stat
-                pidstatfile = strdup(piddir);
-                sprintf(pidstatfile, "%s/%s", pidstatfile, STATFILENAME);
-                // read ppid (main process) stat file
-                if (ppid == atoi(dirp->d_name)){
-                    pid = ppid;
-                    append_pid(local_proclist, pidstatfile, pid);
-                }
-                else {
-                    pid = scan_for_pid(pidstatfile, ppid);
-                    if (pid >= 0)
-                        append_pid(local_proclist, pidstatfile, pid);
-                }
+				read_statfile(local_proclist, dirp->d_name, ppid);
             }
         }
     }
 
-    if (local_proclist->processes != NULL)
-        print_table(local_proclist);
-
     return local_proclist;
+}
+
+int read_statfile(PROCLIST * proclist, const char *dirname, int ppid){
+    char *pidstatfile = (char *) malloc(FILENAME_MAX * sizeof(char));
+    int pid;
+
+    sprintf(pidstatfile, "%s/%s/%s", PROCDIR, dirname, STATFILENAME);
+    if (ppid == atoi(dirname)){
+        pid = ppid;
+        append_pid(proclist, pidstatfile, pid);
+    }
+    else {
+        pid = scan_for_pid(pidstatfile, ppid);
+        if (pid >= 0)
+            append_pid(proclist, pidstatfile, pid);
+    }
 }
 
 int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
@@ -148,17 +155,6 @@ PROC ** processes_realloc(PROCLIST * proclist){
         return (PROC **) realloc(proclist->processes, proclist->pnum * sizeof(PROC *));
     else
         return NULL;
-}
-
-int print_processes(PROCLIST *proclist){
-    for (int i = 0; i < proclist->pnum; i++){
-        printf("%d %s %d %ld %ld\n",
-                proclist->processes[i]->pid,
-                proclist->processes[i]->comm,
-                proclist->processes[i]->ppid,
-                proclist->processes[i]->num_threads,
-                proclist->processes[i]->rss);
-    }
 }
 
 void print_dashline(int length){

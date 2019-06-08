@@ -42,4 +42,6 @@ int fields_size(PROCLIST *proclist, int f[]);
 
 int line_size(int * fields);
 
+int read_statfile(PROCLIST * proclist, const char *dirname, int ppid);
+
 #endif
