@@ -14,6 +14,7 @@ typedef struct _proc {
     int ppid;               //   (4) %d
     long int num_threads;   //  (20) %ld
     long int rss;           //  (24) %ld
+    long int mem;           //   rss * pagesize
 } PROC;
 
 typedef struct _proclist {
