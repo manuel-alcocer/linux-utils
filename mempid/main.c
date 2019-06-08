@@ -75,7 +75,8 @@ PROCLIST * getpidlist(int ppid){
         }
     }
 
-    print_table(local_proclist);
+    if (local_proclist->processes != NULL)
+        print_table(local_proclist);
 
     return local_proclist;
 }
@@ -119,16 +120,12 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
 
 int scan_for_pid(const char *pidstatfile, int ppid){
     FILE *fp;
-    ssize_t nread;
-    size_t len = 0;
-    char *line;
-    int c;
-    int local_pid, local_ppid;
+    int c, local_pid, local_ppid;
 
     if ((fp = fopen(pidstatfile, "r")) == NULL)
         return -1;          // error opening stat file
 
-    c = fscanf(fp, "%md %*s %*c %md", &local_pid, &local_ppid);
+    c = fscanf(fp, "%d %*s %*c %d", &local_pid, &local_ppid);
 
     if (c == 2 && local_ppid == ppid)
         return local_pid;
@@ -164,21 +161,40 @@ int print_processes(PROCLIST *proclist){
     }
 }
 
+void print_dashline(int length){
+    printf(" ");
+    for (int i = 0; i < length; i++)
+        printf("-");
+    printf("\n");
+}
+
 int print_table(PROCLIST *proclist){
-    int f[] = { 0, 0, 0, 0, 0 };
-    char linefmt[1024];
+    int l, f[] = { 3, 4, 4, 7, 3 };         // init vals: min field size
+    char *linefmt, *titlefmt, *title[] = { "PID", "PPID", "THREADS", "RSS", "COMM"};
 
-//    l = line_size(&f);
+    fields_size(proclist, f);
+    l = line_size(f);
 
-    printf(" | %d | %d | %d | %d | %d |", f[0], f[1], f[2], f[3], f[4]);
-    //printf(" ");
-    //for (int i = 0; i < l; i++)
-    //    printf("-");
-    //printf("\n");
+    linefmt = (char *) malloc((l + 2) * sizeof(char));
+    titlefmt = (char *) malloc((l + 2) * sizeof(char));
 
-    //printf(" | %%.%dd | %%.%dd | %%.%dld | %%.%dld | %%.%ds |",
-    //        *f, *f + 2, *f + 3, *f + 4, *f + 1);
+    sprintf(linefmt, " | %%%dd | %%%dd | %%%dld | %%%dld | %%-%ds |\n", f[0], f[2], f[3], f[4], f[1]);
+    sprintf(titlefmt, " | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds |\n", f[0], f[2], f[3], f[4], f[1]);
 
+    print_dashline(l);
+    printf(titlefmt, title[0], title[1], title[2], title[3], title[4]);
+    print_dashline(l);
+
+    for (int i = 0; i < proclist->pnum; i++){
+        printf(linefmt,
+                proclist->processes[i]->pid,
+                proclist->processes[i]->ppid,
+                proclist->processes[i]->num_threads,
+                proclist->processes[i]->rss,
+                proclist->processes[i]->comm);
+    }
+
+    print_dashline(l);
 
 }
 
@@ -190,26 +206,21 @@ int line_size(int * fields){
     return (sum + 1);
 }
 
-int fields_size(PROCLIST *proclist, int * *f){
+int fields_size(PROCLIST *proclist, int *f){
     int fieldsize;
-    char *buff;
+    char buff[1024];
 
     for (int i = 0; i < proclist->pnum; i++){
         fieldsize = sprintf(buff, "%d", proclist->processes[i]->pid);
-        *(f[0]) = (fieldsize > *(f[0])) ? fieldsize : *(f[0]);
-        printf("%d - %d\n", fieldsize, *(f[0]));
+        *f = (fieldsize > *f) ? fieldsize : *f;
         fieldsize = sprintf(buff, "%s", proclist->processes[i]->comm);
-        *(f[1]) = (fieldsize > *(f[1])) ? fieldsize : *(f[1]);
-        printf("%d - %d\n", fieldsize, *(f[1]));
+        *(f + 1) = (fieldsize > *(f + 1)) ? fieldsize : *(f + 1);
         fieldsize = sprintf(buff, "%d", proclist->processes[i]->ppid);
-        *(f[2]) = (fieldsize > *(f[2])) ? fieldsize : *(f[2]);
-        printf("%d - %d\n", fieldsize, *(f[2]));
+        *(f + 2) = (fieldsize > *(f + 2)) ? fieldsize : *(f + 2);
         fieldsize = sprintf(buff, "%ld", proclist->processes[i]->num_threads);
-        *(f[3]) = (fieldsize > *(f[3])) ? fieldsize : *(f[3]);
-        printf("%d - %d\n", fieldsize, *(f[3]));
+        *(f + 3) = (fieldsize > *(f + 3)) ? fieldsize : *(f + 3);
         fieldsize = sprintf(buff, "%ld", proclist->processes[i]->rss);
-        *(f[4]) = (fieldsize > *(f[4])) ? fieldsize : *(f[4]);
-        printf("%d - %d\n", fieldsize, *(f[4]));
+        *(f + 4) = (fieldsize > *(f + 4)) ? fieldsize : *(f + 4);
     }
 }
 

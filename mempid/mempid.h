@@ -4,7 +4,7 @@
 #define PROCDIR "/proc"
 #define STATFILENAME "stat"
 
-#define statscanf "%md %ms %*c %md %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %mld %*ld %*llu %*lu %mld"
+#define statscanf "%d %ms %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %ld %*ld %*llu %*lu %mld"
 
 enum _flags { SUMMARY = 1, PPID = 2 };
 
@@ -38,7 +38,7 @@ int print_processes(PROCLIST *proclist);
 
 int print_table(PROCLIST *proclist);
 
-int fields_size(PROCLIST *proclist, int * *f);
+int fields_size(PROCLIST *proclist, int f[]);
 
 int line_size(int * fields);
 
