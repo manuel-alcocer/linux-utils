@@ -53,6 +53,8 @@ int main(int argc, char **argv){
     if (proclist->pnum > 0){
         if (flags & TSUMMARY == TSUMMARY)
             print_table(proclist);
+        else
+            print_total_mem(proclist);
     }
 
     return 0;
@@ -176,6 +178,10 @@ void print_dashline(int length){
     for (int i = 0; i < length; i++)
         printf("-");
     printf("\n");
+}
+
+void print_total_mem(PROCLIST *proclist){
+    printf("%lu\n", proclist->total_mem / proclist->factor);
 }
 
 void print_table(PROCLIST *proclist){

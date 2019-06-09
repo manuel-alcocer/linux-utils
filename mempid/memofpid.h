@@ -42,6 +42,8 @@ int scan_for_pid(const char *pidstatfile, int ppid);
 
 void print_table(PROCLIST *proclist);
 
+void print_total_mem(PROCLIST *proclist);
+
 void fields_size(PROCLIST *proclist, int *f);
 
 int line_size(int * fields);
