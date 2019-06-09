@@ -12,8 +12,8 @@ It has two basic forms for showing the result: on the one hand a summary and det
 $ ./memofpid <-p PID> [-t] [-u {B,K,M,G}]
 ```
 
-* -t        Make a deatiled table
-* -u UNIT   Selects the units for memory field. Available values are: B,K,M,G.
+* `-t        Make a detailed table`
+* `-u UNIT   Selects the units for memory field. Available values are: B,K,M,G`
 
 If you don't pass `-t` as argument, *memofpid* will shown the sum of all processes.
 
