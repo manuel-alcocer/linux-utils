@@ -290,6 +290,6 @@ void help(){
             "    -p PPID    PID del proceso padre\n"
             "    -t         Muestra una tabla resumen\n"
             "    -u <unit>  Unidad de representación\n"
-            "                 Valores: B, K, M, G");
+            "                 Valores: B, K, M, G\n");
 }
 
