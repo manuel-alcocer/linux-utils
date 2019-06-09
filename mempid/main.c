@@ -89,7 +89,7 @@ PROCLIST * getpidlist(int ppid){
 }
 
 int read_statfile(PROCLIST * proclist, const char *dirname, int ppid){
-    char *pidstatfile = (char *) malloc(FILENAME_MAX  * sizeof(char));
+    char pidstatfile[FILENAME_MAX];
     int pid;
 
     sprintf(pidstatfile, "%s/%s/%s", PROCDIR, dirname, STATFILENAME);
