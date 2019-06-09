@@ -203,6 +203,7 @@ void print_table(PROCLIST *proclist){
     sprintf(linefmt, " | %%%dd | %%%dd | %%%dld | %%%dld | %%-%ds | %%%dld |\n", f[0], f[2], f[3], f[4], f[1], f[5]);
     sprintf(titlefmt, " | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds |\n", f[0], f[2], f[3], f[4], f[1], f[5]);
     sprintf(totalfmt, " | %%%ds | %%%dlu |\n", l - 7 - f[5], f[5]);
+
     print_dashline(l);
     printf(titlefmt, title[0], title[1], title[2], title[3], title[4], memcol);
     print_dashline(l);
