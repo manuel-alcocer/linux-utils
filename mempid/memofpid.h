@@ -8,6 +8,8 @@
 
 enum _flags { TSUMMARY = 1, PPID = 2 };
 
+enum _units_pow { Byte = 'B', KiB = 'K', MiB = 'M', GiB = 'G' };
+
 typedef struct _proc {
     int pid;                //   (1) %d
     char *comm;             //   (2) %s
@@ -22,6 +24,8 @@ typedef struct _proclist {
     long int pagesize;
     PROC ** processes;
     unsigned long int total_mem;
+    char *unitsstr;
+    int factor;
 } PROCLIST;
 
 void help();
@@ -36,11 +40,16 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid);
 
 int scan_for_pid(const char *pidstatfile, int ppid);
 
-int print_table(PROCLIST *proclist);
+void print_table(PROCLIST *proclist);
 
 void fields_size(PROCLIST *proclist, int *f);
 
 int line_size(int * fields);
 
 int read_statfile(PROCLIST * proclist, const char *dirname, int ppid);
+
+int bpow(int num, int pow);
+
+int fill_units(PROCLIST *proclist, const char *unitsstr);
+
 #endif

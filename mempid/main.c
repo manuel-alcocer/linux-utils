@@ -11,8 +11,10 @@
 #include <limits.h>
 
 int main(int argc, char **argv){
-    int opt, *pidlist;
-    unsigned int flags = 0, ppid;
+    // units by default = Bytes
+    int opt, *pidlist, ppid = -1;
+    char *unitstr = "B";
+    unsigned int flags = 0;
     PROCLIST *proclist;
 
     if (argc < 2){
@@ -20,7 +22,7 @@ int main(int argc, char **argv){
         exit(0);
     }
 
-    while ((opt = getopt(argc, argv, "htp:")) != -1){
+    while ((opt = getopt(argc, argv, "htp:u:")) != -1){
         switch (opt){
             case 't':
                 flags |= TSUMMARY;
@@ -29,6 +31,9 @@ int main(int argc, char **argv){
                 flags |= PPID;
                 ppid = atoi(optarg);
                 break;
+            case 'u':
+                unitstr = strdup(optarg);
+                break;
             case 'h':
             default:
                 help();
@@ -36,7 +41,14 @@ int main(int argc, char **argv){
         }
     }
 
+    if (ppid < 0){
+        help();
+        exit(1);
+    }
+
     proclist = getpidlist(ppid);
+
+    fill_units(proclist, unitstr);
 
     if (proclist->pnum > 0){
         if (flags & TSUMMARY == TSUMMARY)
@@ -117,7 +129,7 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
     if (c == 5 && proclist->processes[proclist->pnum - 1]->pid == pid){
         proclist->processes[proclist->pnum - 1]->mem =
             proclist->pagesize * proclist->processes[proclist->pnum - 1]->rss;
-        proclist->total_mem += proclist->processes[proclist->pnum -1]->mem; 
+        proclist->total_mem += proclist->processes[proclist->pnum -1]->mem;
         return 1;
     }
 
@@ -166,11 +178,15 @@ void print_dashline(int length){
     printf("\n");
 }
 
-int print_table(PROCLIST *proclist){
-    int l, f[] = { 3, 4, 4, 7, 3, 3 };         // init vals: min field size
-    char *linefmt, *titlefmt, *totalfmt, *title[] = { "PID", "PPID", "THREADS", "RSS", "MEM","COMM"};
+void print_table(PROCLIST *proclist){
+    // VERY DIRTY FUNC!!! NEED CLEANING!!
     char buff[64], *total = "Total memory";
+    int l, f[] = { 3, 4, 4, 7, 3, 0 };         // init vals: min field size
+    char memcol[64];
+    char *linefmt, *titlefmt, *totalfmt, *title[] = { "PID", "PPID", "THREADS", "RSS","COMM", "MEM" };
 
+    sprintf(memcol, "%s [%s]", title[5], proclist->unitsstr);
+    f[5] = strlen(memcol);
     fields_size(proclist, f);
     l = line_size(f);
 
@@ -178,13 +194,11 @@ int print_table(PROCLIST *proclist){
     titlefmt = (char *) malloc((l + 2) * sizeof(char));
     totalfmt = (char *) malloc((l + 2) * sizeof(char));
 
-    sprintf(linefmt, " | %%%dd | %%%dd | %%%dld | %%%dld | %%%dld | %%-%ds |\n", f[0], f[2], f[3], f[4], f[5], f[1]);
-    sprintf(titlefmt, " | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds |\n", f[0], f[2], f[3], f[4], f[5], f[1]);
-    sprintf(totalfmt, " | %%*%ds | %%-%dlu |", strlen(total), sprintf(buff, "%lu", proclist->total_mem));
-    printf("%s\n", totalfmt);
-//l - strlen(total) - strlen(proclist->total_mem),
+    sprintf(linefmt, " | %%%dd | %%%dd | %%%dld | %%%dld | %%-%ds | %%%dld |\n", f[0], f[2], f[3], f[4], f[1], f[5]);
+    sprintf(titlefmt, " | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds |\n", f[0], f[2], f[3], f[4], f[1], f[5]);
+    sprintf(totalfmt, " | %%%ds | %%%dlu |\n", l - 7 - f[5], f[5]);
     print_dashline(l);
-    printf(titlefmt, title[0], title[1], title[2], title[3], title[4], title[5]);
+    printf(titlefmt, title[0], title[1], title[2], title[3], title[4], memcol);
     print_dashline(l);
 
     for (int i = 0; i < proclist->pnum; i++){
@@ -193,12 +207,12 @@ int print_table(PROCLIST *proclist){
                 proclist->processes[i]->ppid,
                 proclist->processes[i]->num_threads,
                 proclist->processes[i]->rss,
-                proclist->processes[i]->mem,
-                proclist->processes[i]->comm);
+                proclist->processes[i]->comm,
+                proclist->processes[i]->mem / proclist->factor);
     }
 
     print_dashline(l);
-    printf(totalfmt, l - strlen(total) - sprintf(buff, "%lu", proclist->total_mem), total, proclist->total_mem);
+    printf(totalfmt, total, proclist->total_mem / proclist->factor);
     print_dashline(l);
 }
 
@@ -230,10 +244,44 @@ void fields_size(PROCLIST *proclist, int *f){
     }
 }
 
+int fill_units(PROCLIST *proclist, const char *unitsstr){
+    if (!strcmp("B", unitsstr)){
+        proclist->unitsstr = "Bytes";
+        proclist->factor = bpow(1024, 0);
+    }
+    else if (!strcmp("K", unitsstr)){
+        proclist->unitsstr = "KiB";
+        proclist->factor = bpow(1024, 1);
+    }
+    else if (!strcmp("M", unitsstr)){
+        proclist->unitsstr = "MiB";
+        proclist->factor = bpow(1024, 2);
+    }
+    else if (!strcmp("G", unitsstr)){
+        proclist->unitsstr = "GiB";
+        proclist->factor = bpow(1024, 3);
+    } else {
+        proclist->unitsstr = "Bytes";
+        proclist->factor = bpow(1024, 0);
+    }
+
+    return proclist->factor;
+}
+
+int bpow(int num, int pow){
+    int result = 1;
+
+    for (int i = 0; i < pow; i++)
+        result *= num;
+
+    return result;
+}
+
 void help(){
     printf("Ayuda\n"
             "=====\n"
             "    -p PPID    PID del proceso padre\n"
-            "    -t         Muestra una tabla resumen\n");
+            "    -t         Muestra una tabla resumen\n"
+            "    -u <unit>  Unidad de representación\n");
 }
 
