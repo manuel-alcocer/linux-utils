@@ -111,7 +111,6 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
     if ((fp = fopen(pidstatfile, "r")) == NULL)
         return -1;
 
-    // add 1 element for storing pid status
     proclist->pnum++;
     proclist->processes = processes_realloc(proclist);
     proclist->processes[proclist->pnum - 1] = (PROC *) malloc(sizeof(PROC));
