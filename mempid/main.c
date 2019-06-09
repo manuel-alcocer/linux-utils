@@ -289,6 +289,7 @@ void help(){
             "=====\n"
             "    -p PPID    PID del proceso padre\n"
             "    -t         Muestra una tabla resumen\n"
-            "    -u <unit>  Unidad de representación\n");
+            "    -u <unit>  Unidad de representación\n"
+            "                 Valores: B, K, M, G");
 }
 
