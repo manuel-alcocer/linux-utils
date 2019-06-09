@@ -20,10 +20,10 @@ int main(int argc, char **argv){
         exit(0);
     }
 
-    while ((opt = getopt(argc, argv, "hsp:")) != -1){
+    while ((opt = getopt(argc, argv, "htp:")) != -1){
         switch (opt){
-            case 's':
-                flags |= SUMMARY;
+            case 't':
+                flags |= TSUMMARY;
                 break;
             case 'p':
                 flags |= PPID;
@@ -39,7 +39,7 @@ int main(int argc, char **argv){
     proclist = getpidlist(ppid);
 
     if (proclist->pnum > 0){
-        if (flags & SUMMARY == SUMMARY)
+        if (flags & TSUMMARY == TSUMMARY)
             print_table(proclist);
     }
 
@@ -117,6 +117,7 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
     if (c == 5 && proclist->processes[proclist->pnum - 1]->pid == pid){
         proclist->processes[proclist->pnum - 1]->mem =
             proclist->pagesize * proclist->processes[proclist->pnum - 1]->rss;
+        proclist->total_mem += proclist->processes[proclist->pnum -1]->mem; 
         return 1;
     }
 
@@ -167,17 +168,21 @@ void print_dashline(int length){
 
 int print_table(PROCLIST *proclist){
     int l, f[] = { 3, 4, 4, 7, 3, 3 };         // init vals: min field size
-    char *linefmt, *titlefmt, *title[] = { "PID", "PPID", "THREADS", "RSS", "MEM","COMM"};
+    char *linefmt, *titlefmt, *totalfmt, *title[] = { "PID", "PPID", "THREADS", "RSS", "MEM","COMM"};
+    char buff[64], *total = "Total memory";
 
     fields_size(proclist, f);
     l = line_size(f);
 
     linefmt = (char *) malloc((l + 2) * sizeof(char));
     titlefmt = (char *) malloc((l + 2) * sizeof(char));
+    totalfmt = (char *) malloc((l + 2) * sizeof(char));
 
     sprintf(linefmt, " | %%%dd | %%%dd | %%%dld | %%%dld | %%%dld | %%-%ds |\n", f[0], f[2], f[3], f[4], f[5], f[1]);
     sprintf(titlefmt, " | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds | %%-%ds |\n", f[0], f[2], f[3], f[4], f[5], f[1]);
-
+    sprintf(totalfmt, " | %%*%ds | %%-%dlu |", strlen(total), sprintf(buff, "%lu", proclist->total_mem));
+    printf("%s\n", totalfmt);
+//l - strlen(total) - strlen(proclist->total_mem),
     print_dashline(l);
     printf(titlefmt, title[0], title[1], title[2], title[3], title[4], title[5]);
     print_dashline(l);
@@ -193,7 +198,8 @@ int print_table(PROCLIST *proclist){
     }
 
     print_dashline(l);
-
+    printf(totalfmt, l - strlen(total) - sprintf(buff, "%lu", proclist->total_mem), total, proclist->total_mem);
+    print_dashline(l);
 }
 
 int line_size(int * fields){
@@ -204,7 +210,7 @@ int line_size(int * fields){
     return (sum + 1);
 }
 
-int fields_size(PROCLIST *proclist, int *f){
+void fields_size(PROCLIST *proclist, int *f){
     int fieldsize;
     char buff[64];
 
@@ -228,6 +234,6 @@ void help(){
     printf("Ayuda\n"
             "=====\n"
             "    -p PPID    PID del proceso padre\n"
-            "    -s         Muestra solo el resumen\n");
+            "    -t         Muestra una tabla resumen\n");
 }
 

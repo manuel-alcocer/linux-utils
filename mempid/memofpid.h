@@ -6,7 +6,7 @@
 
 #define statscanf "%d (%m[^)]) %*c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %ld %*d %*u %*u %ld"
 
-enum _flags { SUMMARY = 1, PPID = 2 };
+enum _flags { TSUMMARY = 1, PPID = 2 };
 
 typedef struct _proc {
     int pid;                //   (1) %d
@@ -21,6 +21,7 @@ typedef struct _proclist {
     int pnum;
     long int pagesize;
     PROC ** processes;
+    unsigned long int total_mem;
 } PROCLIST;
 
 void help();
@@ -37,7 +38,7 @@ int scan_for_pid(const char *pidstatfile, int ppid);
 
 int print_table(PROCLIST *proclist);
 
-int fields_size(PROCLIST *proclist, int f[]);
+void fields_size(PROCLIST *proclist, int *f);
 
 int line_size(int * fields);
 
