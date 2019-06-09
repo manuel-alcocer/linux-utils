@@ -13,7 +13,7 @@
 int main(int argc, char **argv){
     int opt;
     long ppid = -1;
-    char *endptr = NULL, *unitstr = "B";
+    char *endptr, *unitstr = "B";
     unsigned int flags = 0;
     PROCLIST *proclist;
 
@@ -29,7 +29,7 @@ int main(int argc, char **argv){
                 break;
             case 'p':
                 ppid = strtol(optarg, &endptr, 10);
-                flags |= (endptr == optarg) ? 0 : PPID;
+                flags |= (endptr) ? 0 : PPID;
                 break;
             case 'u':
                 unitstr = strdup(optarg);

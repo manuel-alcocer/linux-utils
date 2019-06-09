@@ -6,6 +6,10 @@
 
 #define statscanf "%d (%m[^)]) %*c %d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %ld %*d %*u %*u %ld"
 
+#define intsize(x,y) sprintf(x,"%d",y)
+#define strsize(x,y) sprintf(x,"%s",y)
+#define lintsize(x,y) sprintf(x,"%ld",y)
+
 enum _flags { TSUMMARY = 1, PPID = 2 };
 
 enum _units_pow { Byte = 'B', KiB = 'K', MiB = 'M', GiB = 'G' };
