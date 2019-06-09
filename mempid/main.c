@@ -69,6 +69,7 @@ PROCLIST * getpidlist(int ppid){
     PROCLIST * local_proclist = (PROCLIST *) malloc(sizeof(PROCLIST));
 
     local_proclist->pnum = 0;
+    local_proclist->total_mem = 0;
     local_proclist->processes = NULL;
     local_proclist->pagesize = sysconf(_SC_PAGESIZE);
 
@@ -107,7 +108,6 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
     FILE *fp;
     int c;
 
-    // if error open stat file of process return -1
     if ((fp = fopen(pidstatfile, "r")) == NULL)
         return -1;
 
@@ -116,25 +116,24 @@ int append_pid(PROCLIST * proclist, const char *pidstatfile, int pid){
     proclist->processes = processes_realloc(proclist);
     proclist->processes[proclist->pnum - 1] = (PROC *) malloc(sizeof(PROC));
 
-    // c = fscanf(fp, statscanf, &f, &e, &g, &h, &i);
     c = fscanf(fp, statscanf,
             &proclist->processes[proclist->pnum - 1]->pid,
             &proclist->processes[proclist->pnum - 1]->comm,
             &proclist->processes[proclist->pnum - 1]->ppid,
             &proclist->processes[proclist->pnum - 1]->num_threads,
             &proclist->processes[proclist->pnum - 1]->rss);
-
     fclose(fp);
 
     if (c == 5 && proclist->processes[proclist->pnum - 1]->pid == pid){
         proclist->processes[proclist->pnum - 1]->mem =
             proclist->pagesize * proclist->processes[proclist->pnum - 1]->rss;
         proclist->total_mem += proclist->processes[proclist->pnum -1]->mem;
-        return 1;
-    }
 
-    free(proclist->processes[proclist->pnum - 1]);
-    proclist->pnum--;
+        return 1;
+    } else {
+        free(proclist->processes[proclist->pnum - 1]);
+        proclist->pnum--;
+    }
 
     return 0;
 }
@@ -144,7 +143,7 @@ int scan_for_pid(const char *pidstatfile, int ppid){
     int c, local_pid, local_ppid;
 
     if ((fp = fopen(pidstatfile, "r")) == NULL)
-        return -1;          // error opening stat file
+        return -1;
 
     c = fscanf(fp, "%d %*s %*c %d", &local_pid, &local_ppid);
 
@@ -189,8 +188,7 @@ void print_table(PROCLIST *proclist){
     char memcol[64];
     char *linefmt, *titlefmt, *totalfmt, *title[] = { "PID", "PPID", "THREADS", "RSS","COMM", "MEM" };
 
-    sprintf(memcol, "%s [%s]", title[5], proclist->unitsstr);
-    f[5] = strlen(memcol);
+    f[5] = sprintf(memcol, "%s [%s]", title[5], proclist->unitsstr);
     fields_size(proclist, f);
     l = line_size(f);
 
